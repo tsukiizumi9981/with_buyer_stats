@@ -1,4 +1,42 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>商品統計｜刀劍亂舞代購管理</title><link rel="stylesheet" href="style.css"></head><body><header><div class="topbar"><div class="brand"><h1>刀劍亂舞 STORE 2026</h1><p>祝裝周邊代購管理系統 v3.2 雲端修正版</p></div><nav><a href="index.html">首頁</a><a href="orders.html">新增／編輯訂單</a><a href="buyers.html">訂購人管理</a><a href="statistics.html">商品統計</a><a href="export.html">匯出資料</a></nav></div></header><main><div class="grid grid-4"><div class="card metric"><div class="label">角色商品件數</div><div class="value" id="charUnits">0</div></div><div class="card metric"><div class="label">隨機徽章件數</div><div class="value" id="randomUnits">0</div></div><div class="card metric"><div class="label">總商品數</div><div class="value" id="allUnits">0</div></div><div class="card metric"><div class="label">總金額</div><div class="value" id="allTotal">NT$0</div></div></div><section class="panel" style="margin-top:16px"><h2>角色指定商品總統計</h2><div id="characterStats"></div></section><section class="panel"><h2>隨機徽章總統計</h2><div class="grid grid-2"><div><h3 class="section-title">圓形徽章</h3><div id="cbStats"></div></div><div><h3 class="section-title">方形徽章</h3><div id="sbStats"></div></div></div></section></main><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script><script src="firebase-init.js"></script><script src="data.js"></script><script src="app.js"></script><script>
-function renderStats(os){const all=os.flatMap(o=>o.items||[]);charUnits.textContent=all.filter(x=>x.type==="角色指定").reduce((s,x)=>s+x.qty,0);randomUnits.textContent=all.filter(x=>x.type==="隨機商品").reduce((s,x)=>s+x.qty,0);allUnits.textContent=all.reduce((s,x)=>s+x.qty,0);allTotal.textContent=money(all.reduce((s,x)=>s+x.price*x.qty,0));const agg={};all.filter(x=>x.type==="角色指定").forEach(x=>{const k=x.product+"|"+x.target;agg[k]=(agg[k]||0)+x.qty});characterStats.innerHTML=Object.values(PRODUCTS).map(p=>{const rows=Object.entries(agg).filter(([k])=>k.startsWith(p.name+"|")).map(([k,v])=>[k.split("|")[1],v]).sort((a,b)=>b[1]-a[1]);return `<div style="margin-bottom:18px"><h3 class="section-title">${p.name} <span class="badge">${rows.reduce((s,r)=>s+r[1],0)} 件</span></h3>${rows.length?rows.map(r=>`<div class="product-line"><span>${r[0]}</span><b>${r[1]}</b></div>`).join(""):'<div class="muted">尚無資料</div>'}</div>`}).join("");function rr(type,id){const name=RANDOM_PRODUCTS[type].name,data={};all.filter(x=>x.product===name).forEach(x=>data[x.target]=(data[x.target]||0)+x.qty);document.getElementById(id).innerHTML=WAVES.map(w=>`<div class="product-line"><span>第${w}彈</span><b>${data["第"+w+"彈"]||0} 抽</b></div>`).join("")}rr("cb","cbStats");rr("sb","sbStats")}
-fbAuth.onAuthStateChanged(user=>{if(user)listenOrders(renderStats)});
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>商品統計｜刀劍亂舞代購管理</title><link rel="stylesheet" href="style.css"></head><body><header><div class="topbar"><div class="brand"><h1>刀劍亂舞 STORE 2026</h1><p>祝裝周邊代購管理系統 v3.4 雙幣統計修正版</p></div><nav><a href="index.html">首頁</a><a href="orders.html">新增／編輯訂單</a><a href="buyers.html">訂購人管理</a><a href="statistics.html">商品統計</a><a href="export.html">匯出資料</a></nav></div></header><main><section id="statsMessage" class="panel notice">正在準備統計資料…</section><div class="grid grid-4"><div class="card metric"><div class="label">角色商品件數</div><div class="value" id="charUnits">0</div></div><div class="card metric"><div class="label">隨機徽章件數</div><div class="value" id="randomUnits">0</div></div><div class="card metric"><div class="label">總商品數</div><div class="value" id="allUnits">0</div></div><div class="card metric"><div class="label">總金額</div><div class="value" id="allTotal">¥0／NT$0</div></div></div><section class="panel" style="margin-top:16px"><h2>角色指定商品總統計</h2><div id="characterStats"></div></section><section class="panel"><h2>隨機徽章總統計</h2><div class="grid grid-2"><div><h3 class="section-title">圓形徽章 <span class="badge">¥550／NT$120</span></h3><div id="cbStats"></div></div><div><h3 class="section-title">方形徽章 <span class="badge">¥550／NT$120</span></h3><div id="sbStats"></div></div></div></section></main><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script><script src="firebase-init.js"></script><script src="data.js"></script><script src="app.js"></script><script>
+const el=id=>document.getElementById(id);
+let stopStatisticsListener=()=>{};
+function showStatsMessage(message,isError=false){
+  const box=el("statsMessage");
+  if(!box)return;
+  box.classList.toggle("hidden",!message);
+  box.textContent=message||"";
+  box.style.color=isError?"#9b3333":"";
+}
+function renderStats(os){
+  try{
+    const orders=Array.isArray(os)?os:[];
+    const all=orders.flatMap(o=>Array.isArray(o.items)?o.items:[]);
+    el("charUnits").textContent=all.filter(x=>x.type==="角色指定").reduce((s,x)=>s+itemQty(x),0);
+    el("randomUnits").textContent=all.filter(x=>x.type==="隨機商品").reduce((s,x)=>s+itemQty(x),0);
+    el("allUnits").textContent=all.reduce((s,x)=>s+itemQty(x),0);
+    el("allTotal").textContent=dualMoney(all.reduce((s,x)=>s+itemSubtotalJpy(x),0),all.reduce((s,x)=>s+itemSubtotalTwd(x),0));
+    const agg={};
+    all.filter(x=>x.type==="角色指定").forEach(x=>{const k=(x.product||"")+"|"+(x.target||"");agg[k]=(agg[k]||0)+itemQty(x)});
+    el("characterStats").innerHTML=Object.values(PRODUCTS).map(p=>{
+      const rows=Object.entries(agg).filter(([k])=>k.startsWith(p.name+"|")).map(([k,v])=>[k.slice(p.name.length+1),v]).sort((a,b)=>b[1]-a[1]);
+      return `<div style="margin-bottom:18px"><h3 class="section-title">${esc(p.name)} <span class="badge">${moneyJpy(p.jp)}／${moneyTwd(p.twd)}</span> <span class="badge">${rows.reduce((s,r)=>s+r[1],0)} 件</span></h3>${rows.length?rows.map(r=>`<div class="product-line"><span>${esc(r[0])}</span><b>${r[1]}</b></div>`).join(""):'<div class="muted">尚無資料</div>'}</div>`;
+    }).join("");
+    function renderRandom(type,id){
+      const name=RANDOM_PRODUCTS[type].name,data={};
+      all.filter(x=>x.product===name).forEach(x=>data[x.target]=(data[x.target]||0)+itemQty(x));
+      el(id).innerHTML=WAVES.map(w=>`<div class="product-line"><span>第${w}彈</span><b>${data["第"+w+"彈"]||0} 抽</b></div>`).join("");
+    }
+    renderRandom("cb","cbStats");renderRandom("sb","sbStats");
+    showStatsMessage(orders.length?`已載入 ${orders.length} 筆訂單。`:"雲端目前沒有訂單資料。請確認使用的是同一個 Google 帳號與 Firebase 專案。");
+  }catch(error){console.error(error);showStatsMessage("統計顯示失敗："+error.message,true)}
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  onUserReady(user=>{
+    stopStatisticsListener();
+    if(!user){renderStats([]);showStatsMessage("請先按上方「Google 登入」，登入後會自動載入雲端統計。",true);return;}
+    showStatsMessage("正在讀取 Firestore 統計…");
+    stopStatisticsListener=listenOrders(renderStats,error=>showStatsMessage("Firestore 讀取失敗："+error.message,true));
+  });
+});
 </script></body></html>
