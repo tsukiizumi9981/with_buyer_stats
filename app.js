@@ -5,28 +5,9 @@ let AUTH_READY_RESOLVE;
 const AUTH_READY = new Promise(resolve => { AUTH_READY_RESOLVE = resolve; });
 let authInitialized = false;
 
-function moneyTwd(n){return "NT$"+Number(n||0).toLocaleString()}
-function moneyJpy(n){return "¥"+Number(n||0).toLocaleString()}
-function money(n){return moneyTwd(n)}
-function productPriceInfo(productName){
-  const all=[...Object.values(PRODUCTS),...Object.values(RANDOM_PRODUCTS)];
-  return all.find(p=>p.name===productName)||{jp:0,twd:0};
-}
-function itemPriceJpy(item){
-  const info=productPriceInfo(item.product);
-  return Number(item.priceJpy ?? item.jp ?? info.jp ?? 0);
-}
-function itemPriceTwd(item){
-  const info=productPriceInfo(item.product);
-  return Number(item.priceTwd ?? item.twd ?? item.price ?? info.twd ?? 0);
-}
-function itemSubtotalJpy(item){return itemPriceJpy(item)*Number(item.qty||0)}
-function itemSubtotalTwd(item){return itemPriceTwd(item)*Number(item.qty||0)}
-function dualMoney(jpy,twd){return `${moneyJpy(jpy)}／${moneyTwd(twd)}`}
+function money(n){return "NT$"+Number(n||0).toLocaleString()}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-function orderTotalJpy(o){return (o.items||[]).reduce((s,x)=>s+itemSubtotalJpy(x),0)}
-function orderTotalTwd(o){return (o.items||[]).reduce((s,x)=>s+itemSubtotalTwd(x),0)}
-function orderTotal(o){return orderTotalTwd(o)}
+function orderTotal(o){return (o.items||[]).reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||0),0)}
 function orderUnits(o){return (o.items||[]).reduce((s,x)=>s+Number(x.qty||0),0)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 function setActiveNav(){const file=location.pathname.split("/").pop()||"index.html";document.querySelectorAll("nav a").forEach(a=>a.classList.toggle("active",a.getAttribute("href")===file))}
