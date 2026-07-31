@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>刀劍亂舞 STORE 2026｜祝裝周邊登記表</title>
+<style>
+:root{
+  --ink:#2e2a26; --paper:#fffdf8; --gold:#b79043; --gold2:#e8d7aa;
+  --rose:#9d4e55; --soft:#f7f1e5; --line:#ded3bd; --ok:#296b4e;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:
+linear-gradient(135deg,rgba(183,144,67,.06) 25%,transparent 25%) 0 0/28px 28px,
+linear-gradient(315deg,rgba(183,144,67,.06) 25%,transparent 25%) 0 0/28px 28px,var(--paper);color:var(--ink)}
+header{background:linear-gradient(120deg,#27231f,#4a4034);color:white;padding:28px 22px;border-bottom:5px solid var(--gold)}
+header .wrap{max-width:1250px;margin:auto}
+h1{margin:0 0 8px;font-size:clamp(24px,4vw,42px);letter-spacing:.05em}
+header p{margin:0;color:#eadfc6}
+main{max-width:1250px;margin:22px auto;padding:0 16px 60px}
+.panel{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(60,42,20,.08);padding:18px;margin-bottom:18px}
+.toolbar{display:grid;grid-template-columns:1.2fr .8fr auto auto auto;gap:10px;align-items:end}
+label{font-weight:700;font-size:13px}
+input,select,button{font:inherit}
+input[type=text],input[type=number],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:white}
+button{border:0;border-radius:10px;padding:11px 14px;cursor:pointer;font-weight:800}
+.primary{background:var(--rose);color:white}
+.secondary{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.danger{background:#f4e5e5;color:#8b3030}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.stat b{font-size:22px;color:var(--rose)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{background:var(--soft);border:1px solid var(--line)}
+.tab.active{background:var(--gold);color:#fff}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:1040px;background:white}
+th,td{border-bottom:1px solid #eee5d7;padding:9px 8px;text-align:center;vertical-align:middle}
+th{position:sticky;top:0;background:#f3ead7;z-index:2;font-size:13px}
+td.name{text-align:left;font-weight:800;white-space:nowrap}
+.qty{width:62px!important;text-align:center;padding:7px!important}
+.price{font-size:12px;color:#796d5b;white-space:nowrap}
+.subtotal{font-weight:800;color:var(--rose);white-space:nowrap}
+.hidden{display:none!important}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px}
+.card{border:1px solid var(--line);border-radius:13px;padding:14px;background:#fff}
+.card h3{margin:0 0 6px;font-size:16px}
+.card .meta{color:#766b5c;font-size:13px;margin-bottom:10px}
+.card-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.notice{font-size:13px;color:#675e52;line-height:1.7}
+.order-table{min-width:760px}
+.badge{display:inline-block;border-radius:999px;padding:4px 9px;font-size:12px;background:#efe3c6;color:#5f4a21}
+.empty{padding:35px;text-align:center;color:#85796a}
+@media(max-width:800px){
+ .toolbar{grid-template-columns:1fr 1fr}
+ .toolbar .wide{grid-column:1/-1}
+ header{padding:22px 16px}
+}
+@media print{
+ header,.toolbar,.tabs,.actions,.notice{display:none!important}
+ body{background:white}
+ .panel{box-shadow:none;border:0;padding:0}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="wrap">
+  <h1>刀劍亂舞 STORE 2026｜祝裝周邊登記表</h1>
+  <p>119 位角色・6 類商品・自動計算台幣總額</p>
+ </div>
+</header>
+
+<main>
+<section class="panel">
+ <div class="toolbar">
+  <div class="wide">
+   <label for="buyer">登記人／買家名稱</label>
+   <input id="buyer" type="text" placeholder="例如：林小姐">
+  </div>
+  <div>
+   <label for="search">搜尋角色</label>
+   <input id="search" type="text" placeholder="輸入角色名稱">
+  </div>
+  <button class="secondary" id="saveBtn">儲存草稿</button>
+  <button class="primary" id="addOrderBtn">加入訂購人統計</button>
+  <button class="secondary" id="csvBtn">匯出目前訂單 CSV</button>
+ </div>
+ <div class="stats">
+  <div class="stat">已選品項<br><b id="itemCount">0</b></div>
+  <div class="stat">商品總數<br><b id="unitCount">0</b></div>
+  <div class="stat">台幣總額<br><b id="grandTotal">NT$0</b></div>
+ </div>
+</section>
+
+<section class="panel">
+ <div class="tabs">
+  <button class="tab active" data-tab="character">角色指定商品</button>
+  <button class="tab" data-tab="random">隨機徽章</button>
+  <button class="tab" data-tab="summary">目前訂單明細</button>
+  <button class="tab" data-tab="buyers">訂購人統計</button>
+ </div>
+
+ <div id="characterTab">
+  <p class="notice">壓克力立牌依官方角色尺寸分為小／中；請按官方標示在正確欄位登記。其他四項皆為每角色一款。</p>
+  <div class="table-wrap">
+   <table id="characterTable">
+    <thead>
+     <tr>
+      <th>#</th><th>角色</th>
+      <th>壓克力立牌 小<br><span class="price">¥1,320／NT$290</span></th>
+      <th>壓克力立牌 中<br><span class="price">¥1,540／NT$340</span></th>
+      <th>方形壓克力立牌<br><span class="price">¥1,100／NT$245</span></th>
+      <th>2L 寫真卡<br><span class="price">¥500／NT$110</span></th>
+      <th>雨傘吊飾<br><span class="price">¥880／NT$195</span></th>
+      <th>小計</th>
+     </tr>
+    </thead>
+    <tbody id="characterBody"></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div id="randomTab" class="hidden">
+  <p class="notice">隨機商品無法指定角色。第一～十一彈各 10 種，第十二彈 9 種；每抽 NT$120。</p>
+  <div class="cards" id="randomCards"></div>
+ </div>
+
+ <div id="summaryTab" class="hidden">
+  <div class="table-wrap">
+   <table class="order-table">
+    <thead><tr><th>類型</th><th>角色／彈數</th><th>商品</th><th>單價</th><th>數量</th><th>小計</th></tr></thead>
+    <tbody id="summaryBody"></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div id="buyersTab" class="hidden">
+  <p class="notice">填完一位訂購人的商品後，按「加入訂購人統計」。系統會保存該筆訂單並清空目前登記，方便繼續輸入下一位。</p>
+  <div class="stats">
+   <div class="stat">訂購人數<br><b id="buyerCount">0</b></div>
+   <div class="stat">已存訂單<br><b id="orderCount">0</b></div>
+   <div class="stat">全部商品數<br><b id="allUnitCount">0</b></div>
+   <div class="stat">全部訂單金額<br><b id="allGrandTotal">NT$0</b></div>
+  </div>
+  <div class="table-wrap" style="margin-top:14px">
+   <table class="order-table">
+    <thead><tr><th>訂購人</th><th>訂單筆數</th><th>品項數</th><th>商品總數</th><th>總金額</th><th>最後登記時間</th><th>操作</th></tr></thead>
+    <tbody id="buyersBody"></tbody>
+   </table>
+  </div>
+  <div style="margin-top:12px">
+   <button class="primary" id="allCsvBtn">匯出全部訂購人 CSV</button>
+  </div>
+ </div>
+</section>
+
+<section class="panel actions">
+ <button class="secondary" onclick="window.print()">列印／存成 PDF</button>
+ <button class="danger" id="clearBtn">全部清除</button>
+</section>
+</main>
+
+<script>
+const characters = ["三日月宗近", "小狐丸", "石切丸", "岩融", "今剣", "大典太光世", "ソハヤノツルキ", "数珠丸恒次", "にっかり青江", "鬼丸国綱", "鳴狐", "一期一振", "鯰尾藤四郎", "骨喰藤四郎", "平野藤四郎", "厚藤四郎", "後藤藤四郎", "信濃藤四郎", "前田藤四郎", "秋田藤四郎", "博多藤四郎", "乱藤四郎", "五虎退", "薬研藤四郎", "包丁藤四郎", "大包平", "鶯丸", "明石国行", "蛍丸", "愛染国俊", "千子村正", "蜻蛉切", "物吉貞宗", "太鼓鐘真宗", "亀甲貞宗", "燭台切光忠", "大般若長光", "小竜景光", "江雪左文字", "宗三左文字", "小夜左文字", "加州清光", "大和守安定", "歌仙兼定", "和泉守兼定", "陸奥守吉行", "山姥切国広", "山伏国広", "堀川国広", "蜂須賀虎徹", "浦島虎徹", "長曽祢虎徹", "髭切", "膝丸", "大俱利伽羅", "へし切長谷部", "不動行光", "獅子王", "小烏丸", "拔丸", "同田貫正国", "鶴丸国永", "太郎太刀", "次郎太刀", "日本号", "御手杵", "巴形薙刀", "毛利藤四郎", "篭手切江", "謙信景光", "小豆長光", "日向正宗", "靜形薙刀", "南泉一文字", "千代金丸", "山姥切長義", "豐前江", "祢々切丸", "白山吉光", "南海太郎朝尊", "肥前忠広", "北谷菜切", "桑名江", "水心子正秀", "源清麿", "松井江", "山鳥毛", "古今伝授の太刀", "地蔵行平", "治金丸", "日光一文字", "太閤左文字", "五月雨江", "大千鳥十文字槍", "泛塵", "一文字則宗", "村雲江", "姫鶴一文字", "福島光忠", "七星剣", "丙子椒林剣", "稲葉江", "笹貫", "人間無骨", "八丁念仏", "石田正宗", "実休光忠", "京極正宗", "孫六兼元", "後家兼光", "火車切", "富田江", "大慶直胤", "九鬼正宗", "雲生", "道誉一文字", "雲次", "面影", "古備前信房"];
+const products = {
+ afs:{name:"壓克力立牌（小）", price:290},
+ afm:{name:"壓克力立牌（中）", price:340},
+ sas:{name:"方形壓克力立牌", price:245},
+ br:{name:"2L 寫真卡", price:110},
+ uc:{name:"雨傘吊飾", price:195}
+};
+const randomProducts = [
+ ...Array.from({length:12},(_,i)=>({id:`cb-${i+1}`, name:`圓形徽章 第${toChinese(i+1)}彈`, wave:i+1, price:120})),
+ ...Array.from({length:12},(_,i)=>({id:`sb-${i+1}`, name:`方形徽章 第${toChinese(i+1)}彈`, wave:i+1, price:120}))
+];
+function toChinese(n){return ["一","二","三","四","五","六","七","八","九","十","十一","十二"][n-1]}
+const state={chars:{},random:{}};
+let savedOrders=[];
+
+function qtyInput(key, value=0){
+ return `<input class="qty" type="number" min="0" step="1" value="${value||""}" data-key="${key}" inputmode="numeric">`;
+}
+function renderCharacters(filter=""){
+ const body=document.getElementById("characterBody");
+ body.innerHTML="";
+ characters.forEach((name,idx)=>{
+  if(filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
+  const row=document.createElement("tr");
+  row.dataset.name=name;
+  row.innerHTML=`<td>${String(idx+1).padStart(3,"0")}</td><td class="name">${name}</td>`+
+   Object.keys(products).map(pid=>`<td>${qtyInput(`c|${idx}|${pid}`,state.chars[`${idx}|${pid}`])}</td>`).join("")+
+   `<td class="subtotal" id="sub-${idx}">NT$0</td>`;
+  body.appendChild(row);
+ });
+ bindInputs();
+ updateTotals();
+}
+function renderRandom(){
+ const box=document.getElementById("randomCards");
+ box.innerHTML=randomProducts.map(p=>`
+ <div class="card">
+  <h3>${p.name}</h3>
+  <div class="meta"><span class="badge">${p.wave===12?9:10} 種隨機</span>　¥550／NT$120</div>
+  <div class="card-row"><span>登記數量</span>${qtyInput(`r|${p.id}`,state.random[p.id])}</div>
+ </div>`).join("");
+ bindInputs();
+}
+function bindInputs(){
+ document.querySelectorAll(".qty").forEach(el=>{
+  el.oninput=()=>{
+   const v=Math.max(0,parseInt(el.value||0));
+   const [type,a,b]=el.dataset.key.split("|");
+   if(type==="c") state.chars[`${a}|${b}`]=v;
+   else state.random[a]=v;
+   updateTotals();
+  };
+ });
+}
+function updateTotals(){
+ let itemCount=0,units=0,total=0;
+ characters.forEach((_,idx)=>{
+  let sub=0;
+  Object.entries(products).forEach(([pid,p])=>{
+   const q=state.chars[`${idx}|${pid}`]||0;
+   if(q>0)itemCount++;
+   units+=q; sub+=q*p.price;
+  });
+  total+=sub;
+  const node=document.getElementById(`sub-${idx}`);
+  if(node) node.textContent=`NT$${sub.toLocaleString()}`;
+ });
+ randomProducts.forEach(p=>{
+  const q=state.random[p.id]||0;
+  if(q>0)itemCount++;
+  units+=q; total+=q*p.price;
+ });
+ itemCountEl.textContent=itemCount;
+ unitCountEl.textContent=units;
+ grandTotalEl.textContent=`NT$${total.toLocaleString()}`;
+ renderSummary();
+}
+function renderSummary(){
+ const rows=[];
+ characters.forEach((name,idx)=>{
+  Object.entries(products).forEach(([pid,p])=>{
+   const q=state.chars[`${idx}|${pid}`]||0;
+   if(q) rows.push(["角色指定",name,p.name,p.price,q,p.price*q]);
+  });
+ });
+ randomProducts.forEach(p=>{
+  const q=state.random[p.id]||0;
+  if(q) rows.push(["隨機商品",`第${toChinese(p.wave)}彈`,p.name,p.price,q,p.price*q]);
+ });
+ summaryBody.innerHTML=rows.length?rows.map(r=>`<tr>${r.map((x,i)=>`<td>${i===3||i===5?"NT$"+Number(x).toLocaleString():x}</td>`).join("")}</tr>`).join("")
+ :`<tr><td colspan="6" class="empty">尚未登記商品</td></tr>`;
+}
+
+function currentOrderRows(){
+ const rows=[];
+ characters.forEach((name,idx)=>{
+  Object.entries(products).forEach(([pid,p])=>{
+   const q=state.chars[`${idx}|${pid}`]||0;
+   if(q) rows.push({type:"角色指定",target:name,product:p.name,price:p.price,qty:q,subtotal:p.price*q});
+  });
+ });
+ randomProducts.forEach(p=>{
+  const q=state.random[p.id]||0;
+  if(q) rows.push({type:"隨機商品",target:`第${toChinese(p.wave)}彈`,product:p.name,price:p.price,qty:q,subtotal:p.price*q});
+ });
+ return rows;
+}
+function clearCurrentOrder(){
+ state.chars={}; state.random={};
+ document.getElementById("buyer").value="";
+ document.getElementById("search").value="";
+ renderCharacters(); renderRandom(); updateTotals();
+ localStorage.removeItem("toulove2026-order");
+}
+function addCurrentOrder(){
+ const buyerName=document.getElementById("buyer").value.trim();
+ const rows=currentOrderRows();
+ if(!buyerName){alert("請先輸入訂購人名稱");return}
+ if(!rows.length){alert("目前沒有已登記商品");return}
+ savedOrders.push({
+  id:Date.now()+"-"+Math.random().toString(36).slice(2,7),
+  buyer:buyerName,
+  createdAt:new Date().toLocaleString("zh-TW"),
+  rows
+ });
+ localStorage.setItem("toulove2026-saved-orders",JSON.stringify(savedOrders));
+ renderBuyerStats();
+ alert(`已加入 ${buyerName} 的訂單統計`);
+ clearCurrentOrder();
+}
+function renderBuyerStats(){
+ const grouped={};
+ savedOrders.forEach(order=>{
+  if(!grouped[order.buyer]) grouped[order.buyer]={buyer:order.buyer,orders:0,items:0,units:0,total:0,last:""};
+  const g=grouped[order.buyer];
+  g.orders++;
+  g.items+=order.rows.length;
+  g.units+=order.rows.reduce((s,r)=>s+r.qty,0);
+  g.total+=order.rows.reduce((s,r)=>s+r.subtotal,0);
+  g.last=order.createdAt;
+ });
+ const arr=Object.values(grouped).sort((a,b)=>b.total-a.total);
+ buyerCount.textContent=arr.length;
+ orderCount.textContent=savedOrders.length;
+ allUnitCount.textContent=savedOrders.reduce((s,o)=>s+o.rows.reduce((x,r)=>x+r.qty,0),0);
+ allGrandTotal.textContent="NT$"+savedOrders.reduce((s,o)=>s+o.rows.reduce((x,r)=>x+r.subtotal,0),0).toLocaleString();
+ buyersBody.innerHTML=arr.length?arr.map(g=>`<tr>
+  <td class="name">${g.buyer}</td><td>${g.orders}</td><td>${g.items}</td><td>${g.units}</td>
+  <td class="subtotal">NT$${g.total.toLocaleString()}</td><td>${g.last}</td>
+  <td><button class="danger" onclick="deleteBuyerOrders(${JSON.stringify(g.buyer)})">刪除</button></td>
+ </tr>`).join(""):`<tr><td colspan="7" class="empty">尚未加入訂購人訂單</td></tr>`;
+}
+function deleteBuyerOrders(name){
+ if(!confirm(`確定要刪除「${name}」的全部訂單嗎？`))return;
+ savedOrders=savedOrders.filter(o=>o.buyer!==name);
+ localStorage.setItem("toulove2026-saved-orders",JSON.stringify(savedOrders));
+ renderBuyerStats();
+}
+function exportAllCSV(){
+ if(!savedOrders.length){alert("目前沒有已保存的訂購人訂單");return}
+ const rows=[["訂購人","登記時間","類型","角色／彈數","商品","單價（台幣）","數量","小計（台幣）"]];
+ savedOrders.forEach(o=>o.rows.forEach(r=>rows.push([o.buyer,o.createdAt,r.type,r.target,r.product,r.price,r.qty,r.subtotal])));
+ const csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="刀劍亂舞祝裝_全部訂購人統計.csv";
+ a.click(); URL.revokeObjectURL(a.href);
+}
+
+function exportCSV(){
+ const buyer=document.getElementById("buyer").value.trim();
+ const rows=[["買家","類型","角色／彈數","商品","單價（台幣）","數量","小計（台幣）"]];
+ characters.forEach((name,idx)=>{
+  Object.entries(products).forEach(([pid,p])=>{
+   const q=state.chars[`${idx}|${pid}`]||0;
+   if(q) rows.push([buyer,"角色指定",name,p.name,p.price,q,p.price*q]);
+  });
+ });
+ randomProducts.forEach(p=>{
+  const q=state.random[p.id]||0;
+  if(q) rows.push([buyer,"隨機商品",`第${toChinese(p.wave)}彈`,p.name,p.price,q,p.price*q]);
+ });
+ if(rows.length===1){alert("目前沒有已登記商品");return}
+ const csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download=`刀劍亂舞祝裝登記_${buyer||"未命名"}.csv`;
+ a.click(); URL.revokeObjectURL(a.href);
+}
+function save(){
+ localStorage.setItem("toulove2026-order",JSON.stringify({buyer:buyer.value,state}));
+ alert("草稿已儲存在這台裝置");
+}
+function load(){
+ try{
+  const d=JSON.parse(localStorage.getItem("toulove2026-order"));
+  if(d){buyer.value=d.buyer||"";Object.assign(state.chars,d.state?.chars||{});Object.assign(state.random,d.state?.random||{})}
+  savedOrders=JSON.parse(localStorage.getItem("toulove2026-saved-orders")||"[]");
+ }catch(e){savedOrders=[]}
+}
+document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
+ document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+ ["character","random","summary","buyers"].forEach(id=>document.getElementById(id+"Tab").classList.toggle("hidden",btn.dataset.tab!==id));
+});
+search.oninput=e=>renderCharacters(e.target.value);
+saveBtn.onclick=save; addOrderBtn.onclick=addCurrentOrder; csvBtn.onclick=exportCSV; allCsvBtn.onclick=exportAllCSV;
+clearBtn.onclick=()=>{if(confirm("確定要清除所有登記內容嗎？")){localStorage.removeItem("toulove2026-order");location.reload()}};
+load(); renderCharacters(); renderRandom(); updateTotals(); renderBuyerStats();
+</script>
+</body>
+</html>
